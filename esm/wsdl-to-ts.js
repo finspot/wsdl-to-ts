@@ -37,6 +37,12 @@ const xsTypes = new Map([
     ["anyType", "any"],
     ["base64Binary", "string"],
 ]);
+const tsTypes = {
+    boolean: true,
+    number: true,
+    string: true,
+};
+xsTypes.forEach((val) => { tsTypes[val] = true; });
 const toTsName = (name) => name.replace(/[^a-z0-9]/i, "_");
 const parseType = (type) => {
     const [ns, name] = type.split(":");
@@ -281,7 +287,7 @@ export function wsdl2ts(wsdlUri, opts) {
         for (const service of Object.keys(d)) {
             for (const port of Object.keys(d[service])) {
                 const collector = new TypeCollector(port + "Types");
-                // console.log("-- %s.%s", service, port);
+                console.log("-- %s.%s", service, port);
                 if (!r.types[service]) {
                     r.types[service] = {};
                     r.methods[service] = {};
@@ -427,20 +433,33 @@ export function mergeTypedWsdl(a, ...bs) {
     }
     return x;
 }
+const getTypes = (str) => (str.match(/: \b[^;]*\b/g) || [])
+    .map((match) => match.substr(2))
+    .filter((type) => !tsTypes[type]);
+const uniq = (arr) => Object.keys(arr
+    .reduce((out, curr) => (Object.assign({}, out, { [curr]: true })), {}));
 export function outputTypedWsdl(a) {
     const r = [];
     for (const service of Object.keys(a.files)) {
         for (const port of Object.keys(a.files[service])) {
             const d = { file: a.files[service][port], data: [] };
-            d.data.push(`import { Client } from 'soap';`);
+            const unknownTypes = [];
             if (a.types[service] && a.types[service][port]) {
                 for (const type of Object.keys(a.types[service][port])) {
-                    d.data.push(type === GENERATED_DATA_STRING
-                        ? a.types[service][port][type]
-                        : "export interface " + type + " " + a.types[service][port][type]);
+                    if (type === GENERATED_DATA_STRING) {
+                        d.data.push(a.types[service][port][type]);
+                    }
+                    else {
+                        getTypes(a.types[service][port][type]).forEach((t) => unknownTypes.push(t));
+                        d.data.push("export interface " + type + " " + a.types[service][port][type]);
+                    }
                 }
             }
+            if (unknownTypes.length) {
+                d.data.unshift(`import { ${uniq(unknownTypes).join(", ")} } from '../Types';`);
+            }
             if (a.methods[service] && a.methods[service][port]) {
+                d.data.unshift(`import { Client } from 'soap';`);
                 const ms = [];
                 for (const method of Object.keys(a.methods[service][port])) {
                     ms.push(method + ": " + a.methods[service][port][method] + ";");

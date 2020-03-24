@@ -98,8 +98,8 @@ Promise.all(config.files.map((a) => wsdl2ts(a, opts))).
     then(outputTypedWsdl).
     then((xs: Array<{ file: string, data: string[] }>) => {
         return Promise.all(xs.map((x) => {
-            console.log("-- %s --", x.file);
-            console.log("%s", x.data.join("\n\n"));
+            // console.log("-- %s --", x.file);
+            // console.log("%s", x.data.join("\n\n"));
             const file = config.outdir + "/" + x.file;
             const dir = file.replace(/\/[^/]+$/, "");
             return mkdirpp(dir).then(() => {
@@ -124,6 +124,7 @@ Promise.all(config.files.map((a) => wsdl2ts(a, opts))).
                     }
                     fileData.push(x.data.join("\n\n"));
                     fileData.push("");
+
                     writeFile(tsfile, fileData.join("\n"), (err) => {
                         if (err) {
                             reject(err);
