@@ -89,6 +89,8 @@ const parseType: (type: string) => string = (type) => {
 
 const isOptional: (node: any) => boolean = (node) =>
   node.$nillable === "true" || node.$minOccurs === "0";
+const isList: (node: any) => boolean = (node) =>
+  node.$minOccurs === "0" && node.$maxOccurs;
 
 const schemaNodeToTypeString: (
   node: any,
@@ -112,17 +114,7 @@ const schemaNodeToTypeString: (
       context,
     )}`;
   } else if (node.name === "sequence") {
-    const sequenceContent = schemaNodeToTypeString(node.children, context);
-    const requiresObject = /;/.test(sequenceContent);
-    return `${requiresObject ? `{${NEW_LINE}` : ""}${sequenceContent}${
-      requiresObject ? `${NEW_LINE}}` : ""
-    }`;
-  } else if (
-    node.name === "element" &&
-    node.$minOccurs === "0" &&
-    node.$maxOccurs
-  ) {
-    return `${toTsName(parseType(node.$type))}[]`;
+    return `{${NEW_LINE}${schemaNodeToTypeString(node.children, context)}${NEW_LINE}}`;
   } else if (
     node.name === "element" &&
     (/^tns/.test(node.$type) ||
@@ -133,7 +125,7 @@ const schemaNodeToTypeString: (
       node.$type === "xs:dateTime" ||
       node.$type === "xs:string")
   ) {
-    return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${parseType(node.$type)};`;
+    return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${toTsName(parseType(node.$type))}${isList(node) ? "[]" : ""};`;
   } else if (node.name === "restriction") {
     return schemaNodeToTypeString(node.children, {
       ...context,
