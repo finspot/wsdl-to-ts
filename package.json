@@ -1,5 +1,5 @@
 {
-  "name": "wsdl-to-ts",
+  "name": "@stenait/wsdl-to-ts",
   "version": "0.2.3",
   "description": "Build TypeScript typings for SOAP WSDL",
   "main": "lib/wsdl-to-ts.js",
@@ -38,10 +38,10 @@
     "soap": "^0.27.0"
   },
   "bugs": {
-    "url": "https://github.com/TimLuq/wsdl-to-ts/issues"
+    "url": "https://github.com/StenaIT/wsdl-to-ts/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TimLuq/wsdl-to-ts.git"
+    "url": "https://github.com/StenaIT/wsdl-to-ts.git"
   }
 }

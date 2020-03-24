@@ -62,3 +62,5 @@ typings/
 /test/results
 /.idea
 /wsdl
+
+.npmrc

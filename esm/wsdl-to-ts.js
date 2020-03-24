@@ -1,5 +1,10 @@
 import * as soap from "soap";
+import { open_wsdl } from "soap/lib/wsdl";
 // import { diffLines } from "diff";
+const NEW_LINE = `
+`;
+const EMPTY_LINE = `${NEW_LINE}${NEW_LINE}`;
+const GENERATED_DATA_STRING = "GeneratedDataString";
 export const nsEnums = {};
 export class TypeCollector {
     constructor(ns) {
@@ -32,6 +37,85 @@ const xsTypes = new Map([
     ["anyType", "any"],
     ["base64Binary", "string"],
 ]);
+const toTsName = (name) => name.replace(/[^a-z0-9]/i, "_");
+const parseType = (type) => {
+    const [ns, name] = type.split(":");
+    if (ns === "tns") {
+        return name;
+    }
+    else if (name === "dateTime") {
+        return "Date";
+    }
+    else if (name === "int" || name === "double" || name === "decimal") {
+        return "number";
+    }
+    return name;
+};
+const isOptional = (node) => node.$nillable === "true" || node.$minOccurs === "0";
+const schemaNodeToTypeString = (node, context = {}) => {
+    const { baseType } = context;
+    if (Array.isArray(node) && typeof node.length === "number") {
+        return node.map((el) => schemaNodeToTypeString(el, context)).join(NEW_LINE);
+    }
+    else if (node.name === "simpleType") {
+        const simpleTypeDef = schemaNodeToTypeString(node.children);
+        return simpleTypeDef
+            ? `export enum ${toTsName(node.$name)} {${NEW_LINE}${schemaNodeToTypeString(node.children, context)}${NEW_LINE}}`
+            : "";
+    }
+    else if (node.name === "complexType") {
+        return `export type ${toTsName(node.$name)} = ${schemaNodeToTypeString(node.children, context)}`;
+    }
+    else if (node.name === "sequence") {
+        const sequenceContent = schemaNodeToTypeString(node.children, context);
+        const requiresObject = /;/.test(sequenceContent);
+        return `${requiresObject ? `{${NEW_LINE}` : ""}${sequenceContent}${requiresObject ? `${NEW_LINE}}` : ""}`;
+    }
+    else if (node.name === "element" &&
+        node.$minOccurs === "0" &&
+        node.$maxOccurs) {
+        return `${toTsName(parseType(node.$type))}[]`;
+    }
+    else if (node.name === "element" &&
+        (/^tns/.test(node.$type) ||
+            node.$type === "xs:int" ||
+            node.$type === "xs:double" ||
+            node.$type === "xs:decimal" ||
+            node.$type === "xs:boolean" ||
+            node.$type === "xs:dateTime" ||
+            node.$type === "xs:string")) {
+        return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${parseType(node.$type)};`;
+    }
+    else if (node.name === "restriction") {
+        return schemaNodeToTypeString(node.children, Object.assign({}, context, { baseType: parseType(node.$base) }));
+    }
+    else if (node.name === "enumeration" && baseType === "string") {
+        return `  ${node.$value},`;
+    }
+    else if (node.name === "complexContent") {
+        return schemaNodeToTypeString(node.children, context);
+    }
+    else if (node.name === "extension") {
+        return `${parseType(node.$base)} & ${schemaNodeToTypeString(node.children, context)}`;
+    }
+    else if (node.name === "pattern") {
+        return "";
+    }
+    else {
+        console.log("unhandled", node.name, node);
+    }
+};
+const wsdlSchemaGroupsToTypeString = (schema, keys) => keys
+    .map((key) => {
+    const objects = schema[key];
+    return Object.keys(objects)
+        .map((objKey) => schemaNodeToTypeString(objects[objKey]))
+        .join(EMPTY_LINE);
+})
+    .join(EMPTY_LINE);
+const wsdlSchemaToTypeString = (schemas) => Object.keys(schemas)
+    .map((key) => wsdlSchemaGroupsToTypeString(schemas[key], ["types", "complexTypes"]))
+    .join(EMPTY_LINE);
 function wsdlTypeToInterfaceObj(obj, typeCollector) {
     const r = {};
     for (const k of Object.keys(obj)) {
@@ -267,6 +351,22 @@ export function wsdl2ts(wsdlUri, opts) {
             }
         }
         return r;
+    })
+        .then((out) => {
+        return new Promise((resolve, reject) => {
+            out.files.Common = { Types: "Types" };
+            open_wsdl(wsdlUri, (error, wsdl) => {
+                if (error) {
+                    reject(error);
+                }
+                out.types.Common = {
+                    Types: {
+                        [GENERATED_DATA_STRING]: wsdlSchemaToTypeString(wsdl.definitions.schemas),
+                    },
+                };
+                resolve(out);
+            });
+        });
     });
 }
 function cloneObj(a) {
@@ -335,7 +435,9 @@ export function outputTypedWsdl(a) {
             d.data.push(`import { Client } from 'soap';`);
             if (a.types[service] && a.types[service][port]) {
                 for (const type of Object.keys(a.types[service][port])) {
-                    d.data.push("export interface " + type + " " + a.types[service][port][type]);
+                    d.data.push(type === GENERATED_DATA_STRING
+                        ? a.types[service][port][type]
+                        : "export interface " + type + " " + a.types[service][port][type]);
                 }
             }
             if (a.methods[service] && a.methods[service][port]) {
