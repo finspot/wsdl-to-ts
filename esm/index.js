@@ -3,7 +3,7 @@
 import { rename, writeFile } from "fs";
 import * as minimist from "minimist";
 import * as mkdirp from "mkdirp";
-import { mergeTypedWsdl, outputTypedWsdl, wsdl2ts } from "./wsdl-to-ts";
+import { mergeTypedWsdl, outputTypedWsdl, wsdl2ts, } from "./wsdl-to-ts";
 const opts = {};
 const config = {
     outdir: "./wsdl",
@@ -35,7 +35,9 @@ if (args.hasOwnProperty("tslint")) {
     }
 }
 if (args.hasOwnProperty("tslint-disable")) {
-    config.tslintDisable = args["tslint-disable"] ? args["tslint-disable"].split(",") : null;
+    config.tslintDisable = args["tslint-disable"]
+        ? args["tslint-disable"].split(",")
+        : null;
 }
 if (args.hasOwnProperty("eslint")) {
     if (args.eslint === "false" || args.eslint === "disable") {
@@ -49,7 +51,9 @@ if (args.outdir || args.outDir) {
     config.outdir = args.outdir || args.outDir;
 }
 if (args.hasOwnProperty("quote")) {
-    if (args.quote === "false" || args.quote === "disable" || args.quote === "0") {
+    if (args.quote === "false" ||
+        args.quote === "disable" ||
+        args.quote === "0") {
         opts.quoteProperties = false;
     }
     else if (args.quote === "true" || args.quote === "1" || !args.quote) {
@@ -76,10 +80,10 @@ function mkdirpp(dir, mode) {
         });
     });
 }
-Promise.all(config.files.map((a) => wsdl2ts(a, opts))).
-    then((xs) => mergeTypedWsdl.apply(undefined, xs)).
-    then(outputTypedWsdl).
-    then((xs) => {
+Promise.all(config.files.map((a) => wsdl2ts(a, opts)))
+    .then((xs) => mergeTypedWsdl.apply(undefined, xs))
+    .then(outputTypedWsdl)
+    .then((xs) => {
     return Promise.all(xs.map((x) => {
         // console.log("-- %s --", x.file);
         // console.log("%s", x.data.join("\n\n"));
@@ -120,8 +124,8 @@ Promise.all(config.files.map((a) => wsdl2ts(a, opts))).
             });
         });
     }));
-}).
-    then((files) => Promise.all(files.map((file) => {
+})
+    .then((files) => Promise.all(files.map((file) => {
     return new Promise((resolve, reject) => {
         const realFile = file.replace(/\.[^.]+$/, "");
         rename(file, realFile, (err) => {
@@ -133,8 +137,8 @@ Promise.all(config.files.map((a) => wsdl2ts(a, opts))).
             }
         });
     });
-}))).
-    catch((err) => {
+})))
+    .catch((err) => {
     console.error(err);
     process.exitCode = 3;
 });

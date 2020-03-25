@@ -8,7 +8,9 @@
   "scripts": {
     "test": "node test/index.js",
     "build": "npx tsc -p tsconfig.json --skipLibCheck && npx tsc -p tsconfig.json --skipLibCheck -d --outDir esm --module es2015 --target es2016",
-    "ci": "npm run build && npm test"
+    "ci": "npm run build && npm test",
+    "prettier": "prettier --parser typescript --write 'src/**/*.{ts,tsx}'",
+    "watch": "npx nodemon -w src/index.ts -w src/wsdl-to-ts.ts -x \"npx ts-node src/index.ts 'http://wstravel.stenaline.com/SWS/Service.svc?wsdl'\""
   },
   "bin": {
     "wsdl-to-ts": "lib/index.js"
@@ -29,6 +31,8 @@
     "@types/minimist": "^1.2.0",
     "@types/mkdirp": ">=0.5.1 <1.0.0",
     "@types/node": ">=6.0.0 <12.0.0",
+    "husky": "^4.2.3",
+    "prettier": "^2.0.2",
     "tslint": "^5.11.0",
     "typescript": "^2.2.0"
   },
@@ -43,5 +47,16 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/StenaIT/wsdl-to-ts.git"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npm run prettier",
+      "git add"
+    ]
   }
 }
