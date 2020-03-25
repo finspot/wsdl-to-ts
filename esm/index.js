@@ -3,7 +3,7 @@
 import { rename, writeFile } from "fs";
 import * as minimist from "minimist";
 import * as mkdirp from "mkdirp";
-import { mergeTypedWsdl, outputTypedWsdl, wsdl2ts, } from "./wsdl-to-ts";
+import { mergeTypedWsdl, outputTypedWsdl, wsdl2ts } from "./wsdl-to-ts";
 const opts = {};
 const config = {
     outdir: "./wsdl",
@@ -35,9 +35,7 @@ if (args.hasOwnProperty("tslint")) {
     }
 }
 if (args.hasOwnProperty("tslint-disable")) {
-    config.tslintDisable = args["tslint-disable"]
-        ? args["tslint-disable"].split(",")
-        : null;
+    config.tslintDisable = args["tslint-disable"] ? args["tslint-disable"].split(",") : null;
 }
 if (args.hasOwnProperty("eslint")) {
     if (args.eslint === "false" || args.eslint === "disable") {
@@ -51,9 +49,7 @@ if (args.outdir || args.outDir) {
     config.outdir = args.outdir || args.outDir;
 }
 if (args.hasOwnProperty("quote")) {
-    if (args.quote === "false" ||
-        args.quote === "disable" ||
-        args.quote === "0") {
+    if (args.quote === "false" || args.quote === "disable" || args.quote === "0") {
         opts.quoteProperties = false;
     }
     else if (args.quote === "true" || args.quote === "1" || !args.quote) {

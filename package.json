@@ -1,6 +1,6 @@
 {
   "name": "@stenait/wsdl-to-ts",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Build TypeScript typings for SOAP WSDL",
   "main": "lib/wsdl-to-ts.js",
   "module": "esm/wsdl-to-ts.js",
