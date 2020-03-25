@@ -124,7 +124,7 @@ const schemaNodeToTypeString: (node: any, context?: { baseType?: string }) => st
       baseType: parseType(node.$base),
     });
   } else if (node.name === "enumeration" && baseType === "string") {
-    return `  ${node.$value},`;
+    return `  ${node.$value} = "${node.$value}",`;
   } else if (node.name === "complexContent") {
     return schemaNodeToTypeString(node.children, context);
   } else if (node.name === "extension") {
