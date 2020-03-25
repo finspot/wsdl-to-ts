@@ -87,7 +87,7 @@ Promise.all(config.files.map((a) => wsdl2ts(a, opts))).
         const dir = file.replace(/\/[^/]+$/, "");
         return mkdirpp(dir).then(() => {
             return new Promise((resolve, reject) => {
-                const tsfile = file + ".d.ts.tmp";
+                const tsfile = file + ".ts.tmp";
                 const fileData = [];
                 if (config.tslintEnable === null) {
                     fileData.push("/* tslint:enable */");
