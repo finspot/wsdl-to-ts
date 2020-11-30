@@ -89,6 +89,7 @@ const parseType: (type: string) => string = (type) => {
 };
 
 const isOptional: (node: any) => boolean = (node) => node.$nillable === "true" || node.$minOccurs === "0";
+const isNillable: (node: any) => boolean = (node) => node.$nillable === "true";
 const isList: (node: any) => boolean = (node) => node.$minOccurs === "0" && node.$maxOccurs;
 
 const schemaNodeToTypeString: (node: any, context?: { baseType?: string }) => string = (node, context = {}) => {
@@ -115,7 +116,7 @@ const schemaNodeToTypeString: (node: any, context?: { baseType?: string }) => st
       node.$type === "xs:dateTime" ||
       node.$type === "xs:string")
   ) {
-    return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${toTsName(parseType(node.$type))}${
+    return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${isNillable(node) ? "null |" : ""} ${toTsName(parseType(node.$type))}${
       isList(node) ? "[]" : ""
     };`;
   } else if (node.name === "restriction") {
