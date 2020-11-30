@@ -60,6 +60,7 @@ const parseType = (type) => {
     return name;
 };
 const isOptional = (node) => node.$nillable === "true" || node.$minOccurs === "0";
+const isNillable = (node) => node.$nillable === "true";
 const isList = (node) => node.$minOccurs === "0" && node.$maxOccurs;
 const schemaNodeToTypeString = (node, context = {}) => {
     const { baseType } = context;
@@ -86,7 +87,7 @@ const schemaNodeToTypeString = (node, context = {}) => {
             node.$type === "xs:boolean" ||
             node.$type === "xs:dateTime" ||
             node.$type === "xs:string")) {
-        return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${toTsName(parseType(node.$type))}${isList(node) ? "[]" : ""};`;
+        return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${isNillable(node) ? "null |" : ""} ${toTsName(parseType(node.$type))}${isList(node) ? "[]" : ""};`;
     }
     else if (node.name === "restriction") {
         return schemaNodeToTypeString(node.children, Object.assign({}, context, { baseType: parseType(node.$base) }));
@@ -179,14 +180,7 @@ function wsdlTypeToInterfaceObj(obj, typeCollector) {
                 s = s.replace(/\n/g, "\n    ");
                 if (s.startsWith("/**")) {
                     const i = s.indexOf("*/") + 2;
-                    s =
-                        s.substring(0, i) +
-                            " Array<" +
-                            s
-                                .substring(i)
-                                .trim()
-                                .replace(/;$/, "") +
-                            ">;";
+                    s = s.substring(0, i) + " Array<" + s.substring(i).trim().replace(/;$/, "") + ">;";
                 }
                 else {
                     s = s.trim().replace(/;$/, "");

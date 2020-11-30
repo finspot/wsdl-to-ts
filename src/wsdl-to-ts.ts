@@ -116,9 +116,9 @@ const schemaNodeToTypeString: (node: any, context?: { baseType?: string }) => st
       node.$type === "xs:dateTime" ||
       node.$type === "xs:string")
   ) {
-    return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${isNillable(node) ? "null |" : ""} ${toTsName(parseType(node.$type))}${
-      isList(node) ? "[]" : ""
-    };`;
+    return `  ${toTsName(node.$name)}${isOptional(node) ? "?" : ""}: ${isNillable(node) ? "null |" : ""} ${toTsName(
+      parseType(node.$type),
+    )}${isList(node) ? "[]" : ""};`;
   } else if (node.name === "restriction") {
     return schemaNodeToTypeString(node.children, {
       ...context,
@@ -211,14 +211,7 @@ function wsdlTypeToInterfaceObj(obj: IInterfaceObject, typeCollector?: TypeColle
 
         if (s.startsWith("/**")) {
           const i = s.indexOf("*/") + 2;
-          s =
-            s.substring(0, i) +
-            " Array<" +
-            s
-              .substring(i)
-              .trim()
-              .replace(/;$/, "") +
-            ">;";
+          s = s.substring(0, i) + " Array<" + s.substring(i).trim().replace(/;$/, "") + ">;";
         } else {
           s = s.trim().replace(/;$/, "");
           if (/^[A-Za-z0-9.]+$/.test(s)) {
