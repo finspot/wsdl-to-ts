@@ -88,7 +88,7 @@ const parseType: (type: string) => string = (type) => {
   return name;
 };
 
-const isOptional: (node: any) => boolean = (node) => node.$nillable === "true" || node.$minOccurs === "0";
+const isOptional: (node: any) => boolean = (node) => node.$minOccurs === "0";
 const isNillable: (node: any) => boolean = (node) => node.$nillable === "true";
 const isList: (node: any) => boolean = (node) => node.$minOccurs === "0" && node.$maxOccurs;
 
