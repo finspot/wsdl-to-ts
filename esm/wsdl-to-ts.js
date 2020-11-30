@@ -59,7 +59,7 @@ const parseType = (type) => {
     }
     return name;
 };
-const isOptional = (node) => node.$nillable === "true" || node.$minOccurs === "0";
+const isOptional = (node) => node.$minOccurs === "0";
 const isNillable = (node) => node.$nillable === "true";
 const isList = (node) => node.$minOccurs === "0" && node.$maxOccurs;
 const schemaNodeToTypeString = (node, context = {}) => {
